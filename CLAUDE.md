@@ -23,7 +23,7 @@ want their settings UI or main loop. So the tree is split:
 |---|---|---|
 | `src/platforms/*.py`, `src/nodriver_common.py` | **upstream** | Never edit. Overwritten wholesale on sync. |
 | `src/util.py` | **contract** | Upstream calls 31 symbols here. Additive changes only to those. |
-| `src/settings.py`, `src/www/`, `src/nodriver_tixcraft.py`, `src/realname.py`, `tests/`, CI | **ours** | Free to change. Never accept upstream's version. |
+| `src/settings.py`, `src/www/`, `src/nodriver_tixcraft.py`, `src/checkout_fill.py`, `tests/`, CI | **ours** | Free to change. Never accept upstream's version. |
 
 Editing an upstream-owned file is wasted work: the next sync silently reverts it.
 That includes the four invalid escape sequences in `funone.py` / `kham.py` and the
@@ -152,14 +152,37 @@ Security fixes to the settings web UI, which upstream still ships as-is:
 
 Do not "restore compatibility" with upstream on any of these.
 
-One feature addition, `src/realname.py`: real-name (實名制) events ask for
-證件姓名 / 證件號碼 per ticket at checkout and upstream's `platforms/ticketplus.py`
-fills neither, so its confirm handler submits an incomplete form. The filler is
-ours and lives outside `platforms/`; the dispatch arm calls it **before**
-`nodriver_ticketplus_main()`, because upstream submits on the same tick it first
-sees the confirmation page. Fields are matched on visible label text, never
-position, and a page with no id-number box is left alone so an ordinary contact
-form is never overwritten.
+One feature addition, `src/checkout_fill.py`: TicketPlus checkout asks for
+證件姓名 / 證件號碼 per ticket on a real-name event, plus a 信用卡前 6/8 碼
+eligibility box on a card-issuer presale. Upstream's `platforms/ticketplus.py`
+fills none of them, so its submit lands on an incomplete form with the ticket
+already locked.
+
+Both boxes render part-way through upstream's `select -> exclusive_code ->
+agree -> submit` chain, which offers no hook, so this **injects a
+MutationObserver** rather than filling once: upstream's steps are
+await-separated, so the observer runs before it clicks submit. The dispatch arm
+installs it before handing the tab over; a reload drops it and the next tick
+re-installs.
+
+Three guards, all covered by `tests/manual/`:
+
+- classification is on visible label text, never position, and `信用卡號` on the
+  payment page cannot match the prefix keywords (`allows_card_prefix()` also
+  restricts prefix filling to `/order/`)
+- a page with no id-number box is left alone, so an ordinary contact form is
+  never overwritten
+- name/id pairing anchors on the **id** box and walks document order outward,
+  stopping at the next id box. Pairing the two lists on their global index
+  instead let a stray 姓名 elsewhere on the page shift every attendee by one —
+  it wrote the buyer's name into the order form and attendee 2's name into
+  ticket 1.
+
+`tests/manual/gen_checkout_fill_mock.py` builds a page embedding the real
+injected script with a late-rendering ticket block; `drive_checkout_fill_mock.py`
+runs it in headless Chrome and prints pass/fail per guard. Needs Chrome, so it
+is out of the pytest suite — but it is the only thing that proves the observer
+fires at all.
 
 ## Known defects, pinned by tests not fixed
 

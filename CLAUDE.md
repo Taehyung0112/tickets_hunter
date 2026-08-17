@@ -23,7 +23,7 @@ want their settings UI or main loop. So the tree is split:
 |---|---|---|
 | `src/platforms/*.py`, `src/nodriver_common.py` | **upstream** | Never edit. Overwritten wholesale on sync. |
 | `src/util.py` | **contract** | Upstream calls 31 symbols here. Additive changes only to those. |
-| `src/settings.py`, `src/www/`, `src/nodriver_tixcraft.py`, `tests/`, CI | **ours** | Free to change. Never accept upstream's version. |
+| `src/settings.py`, `src/www/`, `src/nodriver_tixcraft.py`, `src/realname.py`, `tests/`, CI | **ours** | Free to change. Never accept upstream's version. |
 
 Editing an upstream-owned file is wasted work: the next sync silently reverts it.
 That includes the four invalid escape sequences in `funone.py` / `kham.py` and the
@@ -151,6 +151,15 @@ Security fixes to the settings web UI, which upstream still ships as-is:
 - `xsrf_cookies=True` on all state-changing endpoints
 
 Do not "restore compatibility" with upstream on any of these.
+
+One feature addition, `src/realname.py`: real-name (實名制) events ask for
+證件姓名 / 證件號碼 per ticket at checkout and upstream's `platforms/ticketplus.py`
+fills neither, so its confirm handler submits an incomplete form. The filler is
+ours and lives outside `platforms/`; the dispatch arm calls it **before**
+`nodriver_ticketplus_main()`, because upstream submits on the same tick it first
+sees the confirmation page. Fields are matched on visible label text, never
+position, and a page with no id-number box is left alone so an ordinary contact
+form is never overwritten.
 
 ## Known defects, pinned by tests not fixed
 

@@ -1,0 +1,18 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+exclude = [".venv", "src/www", "build_scripts"]
+
+[tool.ruff.lint]
+# Deliberately narrow: real errors only.
+#   E9  syntax / IO errors     F63 invalid comparisons
+#   F7  syntax-adjacent bugs   F82 undefined names
+# Style rules (F401 unused imports, E501 line length, ...) would flag hundreds
+# of pre-existing findings across upstream-owned files and drown the signal.
+# Widen this only for paths we own, and only with a commit that fixes them.
+select = ["E9", "F63", "F7", "F82"]

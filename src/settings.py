@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 #encoding=utf-8
 import asyncio
+import base64
 import json
 import os
 import platform
@@ -536,6 +537,14 @@ class NoCacheStaticFileHandler(StaticFileHandler):
             self.set_header('Pragma', 'no-cache')
             self.set_header('Expires', '0')
 
+    def get(self, path, include_body=True):
+        # Tornado only issues the _xsrf cookie when a handler reads
+        # self.xsrf_token, and the settings UI is served entirely as static
+        # files. Touching it here means loading any page hands the browser the
+        # token it needs before the first POST is ever attempted.
+        self.xsrf_token
+        return super().get(path, include_body)
+
 class QuestionHandler(tornado.web.RequestHandler):
     def get(self):
         """Read the instance's MAXBOT_QUESTION.txt and return its content"""
@@ -925,7 +934,14 @@ async def main_server():
         ("/test_telegram", TestTelegramHandler),
         ("/question", QuestionHandler),
         ('/(.*)', NoCacheStaticFileHandler, {"path": os.path.join(SCRIPT_DIR, 'www')}),
-    ])
+    ],
+        # Loopback binding stops the LAN, but not a page you happen to be
+        # visiting: a browser will POST to 127.0.0.1 quite happily. Every
+        # state-changing endpoint now needs the _xsrf token, which a
+        # cross-origin caller cannot read.
+        xsrf_cookies=True,
+        cookie_secret=base64.b64encode(os.urandom(32)).decode("ascii"),
+    )
     app.version = CONST_APP_VERSION;
 
     # Get server_port from config, fallback to default (Issue #156)

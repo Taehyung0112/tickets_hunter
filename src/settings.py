@@ -190,6 +190,10 @@ def get_default_config():
     config_dict["contact"]["real_name"] = ""
     config_dict["contact"]["phone"] = ""
     config_dict["contact"]["credit_card_prefix"] = ""
+    config_dict["contact"]["ID"] = ""
+    config_dict["contact"]["realname_enable"] = False
+    # One attendee per line, "姓名,證件號碼", in ticket order.
+    config_dict["contact"]["realname_attendees"] = ""
 
     # Accounts section (cookies, accounts, passwords)
     config_dict['accounts']={}

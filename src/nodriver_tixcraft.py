@@ -32,6 +32,7 @@ import urllib.parse
 
 import util
 import settings
+import realname
 from NonBrowser import NonBrowser
 
 try:
@@ -942,6 +943,10 @@ async def main(args):
 
         # https://ticketplus.com.tw/*
         if 'ticketplus.com' in url and not ticketplus_purchase_done:
+            # Before upstream, not after: its confirm handler submits the form on
+            # the same tick it first sees the confirmation page.
+            await realname.fill_realname_fields(tab, config_dict, url)
+
             tp_status = await nodriver_ticketplus_main(tab, url, config_dict, ocr, Captcha_Browser)
 
             if isinstance(tp_status, dict):

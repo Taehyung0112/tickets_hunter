@@ -51,7 +51,6 @@ const ocr_captcha_enable = document.querySelector('#ocr_captcha_enable');
 const ocr_captcha_image_source = document.querySelector('#ocr_captcha_image_source');
 const ocr_captcha_force_submit = document.querySelector('#ocr_captcha_force_submit');
 const ocr_captcha_use_universal = document.querySelector('#ocr_captcha_use_universal');
-const remote_url = document.querySelector('#remote_url');
 const ocr_model_path = document.querySelector('#ocr_model_path');
 
 // dictionary
@@ -542,7 +541,6 @@ function renderAdvancedTabTranslations() {
     setRowLabelForField('ocr_captcha_image_source', fieldLabel('OCR image source', 'ocr_captcha_image_source'));
     setRowLabelForField('ocr_captcha_force_submit', fieldLabel('Auto-submit', 'ocr_captcha_force_submit'));
     setRowLabelForField('ocr_captcha_use_universal', fieldLabel('Use universal model', 'ocr_captcha_use_universal'));
-    setRowLabelForField('remote_url', fieldLabel('OCR server URL', 'remote_url'));
     setRowLabelForField('ocr_model_path', fieldLabel('Custom OCR model', 'ocr_model_path'));
 
     applyOrRestore('#btn_test_discord_webhook', 'textContent', 'Test');
@@ -1208,16 +1206,6 @@ function load_settins_to_form(settings)
             ocr_captcha_use_universal.checked = true;
         }
 
-        let remote_url_string = "";
-        let remote_url_array = [];
-        if(settings.advanced.remote_url.length > 0) {
-            remote_url_array = JSON.parse('[' +  settings.advanced.remote_url +']');
-        }
-        if(remote_url_array.length) {
-            remote_url_string = remote_url_array[0];
-        }
-        remote_url.value = remote_url_string;
-
         // custom OCR model path
         if(settings.ocr_captcha.path) {
             ocr_model_path.value = settings.ocr_captcha.path;
@@ -1517,14 +1505,6 @@ function save_changes_to_dict(silent_flag)
             settings.ocr_captcha.force_submit = ocr_captcha_force_submit.checked;
             settings.ocr_captcha.use_universal = ocr_captcha_use_universal.checked;
 
-            let remote_url_array = [];
-            remote_url_array.push(remote_url.value);
-            let remote_url_string = JSON.stringify(remote_url_array);
-            remote_url_string = remote_url_string.substring(0,remote_url_string.length-1);
-            remote_url_string = remote_url_string.substring(1);
-            //console.log("final remote_url_string:"+remote_url_string);
-            settings.advanced.remote_url = remote_url_string;
-
             // custom OCR model path (migrated from advanced.ocr_model_path)
             settings.ocr_captcha.path = ocr_model_path.value;
             // Remove deprecated field if exists
@@ -1730,7 +1710,6 @@ function check_unsaved_fields()
         });
         const field_list_advance = [
             "user_guess_string",
-            "remote_url",
             "auto_reload_page_interval",
             "tixcraft_soft_block_delay",
             "reset_browser_interval",

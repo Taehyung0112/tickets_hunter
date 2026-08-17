@@ -902,18 +902,6 @@ const HELP_CONTENT = {
       <p><strong>支援平台：</strong>TixCraft、iBon、KHAM</p>
       <p class="mb-0 text-muted small">建議保持啟用。若遇到辨識結果異常（如亂碼），可嘗試停用後測試。</p>`,
     link: 'https://github.com/bouob/tickets_hunter/blob/main/guide/settings-guide.md#使用通用-ocr-模型use_universal'
-  },
-
-  remote_url: {
-    title: '設定介面網址',
-    short: '自動產生的設定 UI 存取網址（唯讀）',
-    detail: `
-      <p>設定介面的存取網址，由系統根據「設定介面 Port」自動產生。</p>
-      <p><strong>格式：</strong><code>http://127.0.0.1:{Port}/</code></p>
-      <p>例如，Port 為 <code>16888</code> 時，網址為 <code>http://127.0.0.1:16888/</code>。</p>
-      <p><strong>此欄位為唯讀</strong>，修改後會在下次儲存設定時被自動覆蓋。</p>
-      <p class="mb-0 text-muted small">若需要從其他腳本或工具存取設定 API，可複製此網址使用。</p>`,
-    link: 'https://github.com/bouob/tickets_hunter/blob/main/guide/settings-guide.md#設定介面網址remote_url'
   }
 };
 
@@ -1716,16 +1704,6 @@ const HELP_CONTENT_EN_META = {
       </table>
       <p><strong>Supported platforms:</strong> TixCraft, iBon, KHAM</p>
       <p class="mb-0 text-muted small">Keeping this enabled is recommended. If you see abnormal recognition results, try disabling it and test again.</p>`,
-  },
-  remote_url: {
-    title: 'Settings UI URL',
-    short: 'Auto-generated URL for accessing the settings UI. Read-only.',
-    detailHtml: `
-      <p>This is the access URL for the settings UI. It is generated automatically from the configured "Settings UI port".</p>
-      <p><strong>Format:</strong> <code>http://127.0.0.1:{Port}/</code></p>
-      <p>For example, if the port is <code>16888</code>, the URL becomes <code>http://127.0.0.1:16888/</code>.</p>
-      <p><strong>This field is read-only.</strong> Any manual changes will be overwritten the next time settings are saved.</p>
-      <p class="mb-0 text-muted small">If another script or tool needs to access the settings API, you can copy this URL and use it directly.</p>`,
   },
 };
 

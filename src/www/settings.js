@@ -1,4 +1,25 @@
 
+// XSRF: the server sets an _xsrf cookie on every page load and rejects any
+// state-changing request without a matching token. Registered globally so
+// every $.ajax/$.post call is covered without touching the call sites.
+function get_xsrf_token() {
+    const match = document.cookie.match(/(?:^|;\s*)_xsrf=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : '';
+}
+
+if (window.jQuery) {
+    jQuery.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type || 'GET')) {
+                const token = get_xsrf_token();
+                if (token) {
+                    xhr.setRequestHeader('X-Xsrftoken', token);
+                }
+            }
+        }
+    });
+}
+
 // action bar
 const run_button = document.querySelector('#run_btn');
 const save_button = document.querySelector('#save_btn');

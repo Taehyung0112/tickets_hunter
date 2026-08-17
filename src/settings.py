@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 #encoding=utf-8
 import asyncio
-import base64
 import json
 import os
 import platform
@@ -37,12 +36,6 @@ from typing import (
     cast,
     overload,
 )
-
-try:
-    import ddddocr
-except Exception as exc:
-    print(f"[WARNING] ddddocr module not available: {exc}")
-    print("[WARNING] OCR captcha auto-solve will be disabled.")
 
 # Get script directory for resource paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -247,8 +240,6 @@ def get_default_config():
 
     # Server port for settings web interface (Issue #156)
     config_dict["advanced"]["server_port"] = CONST_SERVER_PORT
-    # remote_url will be dynamically generated based on server_port
-    config_dict["advanced"]["remote_url"] = ""
 
     config_dict["advanced"]["auto_reload_page_interval"] = 5
     config_dict["advanced"]["tixcraft_soft_block_delay"] = ""
@@ -656,13 +647,6 @@ class LoadJsonHandler(tornado.web.RequestHandler):
             self.write({"error": "invalid profile name"})
             return
         config_filepath, config_dict = load_json(profile_name)
-
-        # Dynamically generate remote_url based on server_port (Issue #156)
-        server_port = config_dict.get("advanced", {}).get("server_port", CONST_SERVER_PORT)
-        if not isinstance(server_port, int) or server_port < 1024 or server_port > 65535:
-            server_port = CONST_SERVER_PORT
-        config_dict["advanced"]["remote_url"] = f'"http://127.0.0.1:{server_port}/"'
-
         self.write(config_dict)
 
 class ResetJsonHandler(tornado.web.RequestHandler):
@@ -795,36 +779,6 @@ class ProfilesHandler(tornado.web.RequestHandler):
             return
         self.write({"success": True})
 
-class SendkeyHandler(tornado.web.RequestHandler):
-    def post(self):
-        self.set_header("Access-Control-Allow-Origin", "*")
-        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
-        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
-
-        _body = None
-        is_pass_check = True
-        errorMessage = ""
-        errorCode = 0
-
-        if is_pass_check:
-            is_pass_check = False
-            try :
-                _body = json.loads(self.request.body)
-                is_pass_check = True
-            except Exception:
-                errorMessage = "wrong json format"
-                errorCode = 1001
-                pass
-
-        if is_pass_check:
-            app_root = util.get_app_root()
-            if "token" in _body:
-                tmp_file = _body["token"] + ".tmp"
-                config_filepath = os.path.join(app_root, tmp_file)
-                util.save_json(_body, config_filepath)
-
-        self.write({"return": True})
-
 class TestDiscordWebhookHandler(tornado.web.RequestHandler):
     ALLOWED_HOSTS = ("discord.com", "discordapp.com")
 
@@ -947,96 +901,10 @@ class TestTelegramHandler(tornado.web.RequestHandler):
             debug.log("[Telegram] Test failed: %s" % msg)
             self.write({"success": False, "message": msg})
 
-class OcrHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.write({"answer": "1234"})
-
-    def post(self):
-        self.set_header("Access-Control-Allow-Origin", "*")
-        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
-        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
-
-        _body = None
-        is_pass_check = True
-        errorMessage = ""
-        errorCode = 0
-
-        if is_pass_check:
-            is_pass_check = False
-            try :
-                _body = json.loads(self.request.body)
-                is_pass_check = True
-            except Exception:
-                errorMessage = "wrong json format"
-                errorCode = 1001
-                pass
-
-        img_base64 = None
-        image_data = ""
-        if is_pass_check:
-            if 'image_data' in _body:
-                image_data = _body['image_data']
-                if len(image_data) > 0:
-                    img_base64 = base64.b64decode(image_data)
-            else:
-                errorMessage = "image_data not exist"
-                errorCode = 1002
-
-        #print("is_pass_check:", is_pass_check)
-        #print("errorMessage:", errorMessage)
-        #print("errorCode:", errorCode)
-        ocr_answer = ""
-        if not img_base64 is None:
-            try:
-                ocr_answer = self.application.ocr.classification(img_base64)
-                print("ocr_answer:", ocr_answer)
-            except Exception as exc:
-                pass
-
-        self.write({"answer": ocr_answer})
-
-class QueryHandler(tornado.web.RequestHandler):
-    def format_config_keyword_for_json(self, user_input):
-        if len(user_input) > 0:
-            # Remove any existing quotes first
-            user_input = user_input.replace('"', '').replace("'", '')
-
-            # Add quotes to each keyword
-            # Use semicolon as the ONLY delimiter (Issue #23)
-            if util.CONST_KEYWORD_DELIMITER in user_input:
-                items = user_input.split(util.CONST_KEYWORD_DELIMITER)
-                user_input = ','.join([f'"{item.strip()}"' for item in items if item.strip()])
-            else:
-                user_input = f'"{user_input.strip()}"'
-        return user_input
-
-    def compose_as_json(self, user_input):
-        user_input = self.format_config_keyword_for_json(user_input)
-        return "{\"data\":[%s]}" % user_input
-
-    def get(self):
-        global txt_answer_value
-        answer_text = ""
-        try:
-            answer_text = txt_answer_value.get().strip()
-        except Exception as exc:
-            pass
-        answer_text_output = self.compose_as_json(answer_text)
-        #print("answer_text_output:", answer_text_output)
-        self.write(answer_text_output)
-
 async def main_server():
-    ocr = None
-    try:
-        ocr = ddddocr.DdddOcr(show_ad=False, beta=True)
-    except Exception as exc:
-        print(exc)
-        pass
-
     app = Application([
         ("/version", VersionHandler),
         ("/shutdown", ShutdownHandler),
-        ("/sendkey", SendkeyHandler),
 
         # status api
         ("/status", StatusHandler),
@@ -1054,12 +922,9 @@ async def main_server():
 
         ("/test_discord_webhook", TestDiscordWebhookHandler),
         ("/test_telegram", TestTelegramHandler),
-        ("/ocr", OcrHandler),
-        ("/query", QueryHandler),
         ("/question", QuestionHandler),
         ('/(.*)', NoCacheStaticFileHandler, {"path": os.path.join(SCRIPT_DIR, 'www')}),
     ])
-    app.ocr = ocr;
     app.version = CONST_APP_VERSION;
 
     # Get server_port from config, fallback to default (Issue #156)

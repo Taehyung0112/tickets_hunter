@@ -622,11 +622,11 @@ function renderAutofillTabTranslations() {
     applyOrRestore('#autofill-tab-pane .card-header h6', 'textContent', 'Shared personal information');
     setRowLabelForField('real_name', 'Full name');
     setRowLabelForField('phone', 'Mobile number');
-    setRowLabelForField('credit_card_prefix', 'First 6 digits of card');
+    setRowLabelForField('credit_card_prefix', 'First 6-8 digits of card');
     applyOrRestore('#real_name', 'placeholder', 'Enter your legal name');
     applyOrRestore('#phone', 'placeholder', 'Example: 0912345678');
-    applyOrRestore('#credit_card_prefix', 'placeholder', 'Example: 412345');
-    setNearestFormText('credit_card_prefix', 'Some platforms may require the first 6 digits of the credit card for verification.');
+    applyOrRestore('#credit_card_prefix', 'placeholder', 'Example: 41234567');
+    setNearestFormText('credit_card_prefix', 'Eligibility check for a card-issuer presale. Enter 8 digits; an event asking for 6 is trimmed automatically.');
 
     setRowLabelForField('ID', 'ID number');
     applyOrRestore('#ID', 'placeholder', 'Example: A123456789');

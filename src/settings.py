@@ -57,6 +57,7 @@ CONST_HEARTBEAT_FILE = "heartbeat.txt"
 CONST_HEARTBEAT_ALIVE_SEC = 30
 
 CONST_SERVER_PORT = 16888
+CONST_SERVER_BIND_ADDRESS = "127.0.0.1"
 
 # Multi-instance profiles: each profile is a full settings.json copy
 # stored under profiles/<name>.json; "default" maps to settings.json.
@@ -936,8 +937,12 @@ async def main_server():
         print(f"[WARNING] Invalid server_port: {server_port}, using default: {CONST_SERVER_PORT}")
         server_port = CONST_SERVER_PORT
 
-    app.listen(server_port)
-    print("server running on port:", server_port)
+    # Loopback only. Tornado's listen() defaults address to "", which binds
+    # every interface — /load returns the config with every ticketing-site
+    # password in cleartext, so the default put them on the LAN while the
+    # line below printed 127.0.0.1 and told the user otherwise.
+    app.listen(server_port, address=CONST_SERVER_BIND_ADDRESS)
+    print("server running on %s:%d" % (CONST_SERVER_BIND_ADDRESS, server_port))
 
     url = "http://127.0.0.1:" + str(server_port) + "/settings.html"
     print("goto url:", url)

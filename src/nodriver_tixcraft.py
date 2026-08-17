@@ -32,7 +32,7 @@ import urllib.parse
 
 import util
 import settings
-import realname
+import checkout_fill
 from NonBrowser import NonBrowser
 
 try:
@@ -943,9 +943,10 @@ async def main(args):
 
         # https://ticketplus.com.tw/*
         if 'ticketplus.com' in url and not ticketplus_purchase_done:
-            # Before upstream, not after: its confirm handler submits the form on
-            # the same tick it first sees the confirmation page.
-            await realname.fill_realname_fields(tab, config_dict, url)
+            # Observer, not a one-shot fill: 實名制 and card-prefix boxes render
+            # part-way through upstream's select -> submit chain, which offers no
+            # hook. Installing before upstream runs gets it in place first.
+            await checkout_fill.install_autofill(tab, config_dict, url)
 
             tp_status = await nodriver_ticketplus_main(tab, url, config_dict, ocr, Captcha_Browser)
 

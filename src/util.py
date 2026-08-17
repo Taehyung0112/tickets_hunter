@@ -9,6 +9,7 @@ import subprocess
 import sys
 import threading
 from datetime import datetime
+from itertools import permutations
 from typing import Optional
 
 import requests
@@ -23,35 +24,6 @@ CONST_RANDOM = "random"
 CONST_KEYWORD_DELIMITER = ';'  # New delimiter (semicolon)
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
-
-def get_ip_address():
-    gethostname = None
-    try:
-        gethostname = socket.gethostname()
-    except Exception as exc:
-        print("gethostname", exc)
-        gethostname = None
-
-    default_ip = "127.0.0.1"
-    ip = default_ip
-
-    check_public_ip = True    
-    if "macos" in platform.platform().lower():
-        if "arm64" in platform.platform().lower():
-            check_public_ip = False
-
-    if check_public_ip and not gethostname is None:
-        try:
-            ip = [l for l in ([ip for ip in socket.gethostbyname_ex(gethostname)[2]
-                if not ip.startswith("127.")][:1], [[(s.connect(('8.8.8.8', 53)),
-                s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET,
-                socket.SOCK_DGRAM)]][0][1]]) if l][0][0]
-        except Exception as exc:
-            print("gethostbyname_ex", exc)
-            ip = gethostname
-    
-    #print("get_ip_address:", ip)
-    return ip
 
 def is_connectable(port: int, host: Optional[str] = "localhost") -> bool:
     """Tries to connect to the server at port to see if it is running.
@@ -88,12 +60,6 @@ def find_between( s, first, last ):
         ret = s[start:end]
     except ValueError:
         pass
-    return ret
-
-def is_arm():
-    ret = False
-    if "-arm" in platform.platform():
-        ret = True
     return ret
 
 def get_app_root():
@@ -301,15 +267,6 @@ def force_remove_file(filepath):
             pass
 
 
-def t_or_f(arg):
-    ret = False
-    ua = str(arg).upper()
-    if 'TRUE'.startswith(ua):
-        ret = True
-    elif 'YES'.startswith(ua):
-        ret = True
-    return ret
-
 def format_keyword_string(keyword):
     """
     Minimal keyword formatting - no normalization.
@@ -347,19 +304,6 @@ def format_quota_string(formated_html_text):
     formated_html_text = formated_html_text.replace(')','】')
     return formated_html_text
 
-def full2half(keyword):
-    n = ""
-    if not keyword is None:
-        if len(keyword) > 0:
-            for char in keyword:
-                num = ord(char)
-                if num == 0x3000:
-                    num = 32
-                elif 0xFF01 <= num <= 0xFF5E:
-                    num -= 0xfee0
-                n += chr(num)
-    return n
-
 def get_chinese_numeric():
     my_dict = {}
     my_dict['0']=['0','０','zero','零']
@@ -373,16 +317,6 @@ def get_chinese_numeric():
     my_dict['8']=['8','８','eight','八','捌','⑧','❽','⑻']
     my_dict['9']=['9','９','nine','九','玖','⑨','❾','⑼']
     return my_dict
-
-# 同義字
-def synonym_dict(char):
-    ret = []
-    my_dict = get_chinese_numeric()
-    if char in my_dict:
-        ret = my_dict[char]
-    else:
-        ret.append(char)
-    return ret
 
 def chinese_numeric_to_int(char):
     ret = None
@@ -447,26 +381,6 @@ def is_all_alpha_or_numeric(text):
 
     #print("text/is_all_alpha_or_numeric:",text,ret)
     return ret
-
-def get_brave_bin_path():
-    brave_path = ""
-    if platform.system() == 'Windows':
-        brave_path = "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe"
-        if not os.path.exists(brave_path):
-            brave_path = os.path.expanduser('~') + "\\AppData\\Local\\BraveSoftware\\Brave-Browser\\Application\\brave.exe"
-        if not os.path.exists(brave_path):
-            brave_path = "C:\\Program Files (x86)\\BraveSoftware\\Brave-Browser\\Application\\brave.exe"
-        if not os.path.exists(brave_path):
-            brave_path = "D:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe"
-
-    if platform.system() == 'Linux':
-        brave_path = "/usr/bin/brave-browser"
-
-    if platform.system() == 'Darwin':
-        brave_path = '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser'
-
-    return brave_path
-
 
 # convert web string to reg pattern
 def convert_string_to_pattern(my_str, dynamic_length=True):
@@ -1044,29 +958,6 @@ def format_question_string(CONST_EXAMPLE_SYMBOL, CONST_INPUT_SYMBOL, captcha_tex
     tmp_text = tmp_text.replace('）',')')
 
     return tmp_text
-
-def permutations(iterable, r=None):
-    pool = tuple(iterable)
-    n = len(pool)
-    r = n if r is None else r
-    if r > n:
-        return
-    indices = list(range(n))
-    cycles = list(range(n, n-r, -1))
-    yield tuple(pool[i] for i in indices[:r])
-    while n:
-        for i in reversed(range(r)):
-            cycles[i] -= 1
-            if cycles[i] == 0:
-                indices[i:] = indices[i+1:] + indices[i:i+1]
-                cycles[i] = n - i
-            else:
-                j = cycles[i]
-                indices[i], indices[-j] = indices[-j], indices[i]
-                yield tuple(pool[i] for i in indices[:r])
-                break
-        else:
-            return
 
 def get_answer_list_by_question(CONST_EXAMPLE_SYMBOL, CONST_INPUT_SYMBOL, captcha_text_div_text, config_dict=None):
     debug = create_debug_logger(config_dict)
@@ -2034,55 +1925,6 @@ def get_answer_list_from_question_string(registrationsNewApp_div, captcha_text_d
 
     return answer_list
 
-def kktix_get_registerStatus(event_code):
-    html_result = None
-
-    url = "https://kktix.com/g/events/%s/register_info" % (event_code)
-    #print('event_code:',event_code)
-    #print("url:", url)
-
-    headers = {"Accept-Language": "zh-TW,zh;q=0.5", 'User-Agent': USER_AGENT}
-    try:
-        html_result = requests.get(url , headers=headers, timeout=0.7, allow_redirects=False)
-    except Exception as exc:
-        html_result = None
-        print("send reg_info request fail:")
-        print(exc)
-
-    registerStatus = ""
-    if not html_result is None:
-        status_code = html_result.status_code
-        #print("status_code:",status_code)
-        if status_code == 200:
-            html_text = html_result.text
-            #print("html_text:", html_text)
-            try:
-                jsLoads = json.loads(html_text)
-                if 'inventory' in jsLoads:
-                    if 'registerStatus' in jsLoads['inventory']:
-                        registerStatus = jsLoads['inventory']['registerStatus']
-            except Exception as exc:
-                print("load reg_info json fail:")
-                print(exc)
-                pass
-
-    #print("registerStatus:", registerStatus)
-    return registerStatus
-
-def kktix_get_event_code(url):
-    event_code = ""
-    if '/registrations/new' in url:
-        prefix_list = ['.com/events/','.cc/events/']
-        postfix = '/registrations/new'
-
-        for prefix in prefix_list:
-            event_code = find_between(url,prefix,postfix)
-            if len(event_code) > 0:
-                break
-
-    #print('event_code:',event_code)
-    return event_code
-
 def launch_maxbot(script_name="nodriver_tixcraft", filename="", homepage="", kktix_account = "", kktix_password="", window_size="", headless="", instance=""):
     cmd_argument = []
     if len(filename) > 0:
@@ -2215,9 +2057,6 @@ def parse_nodriver_result(result):
 
     # 若不是標準格式，原樣返回
     return result
-
-def get_token():
-    return str(uuid.uuid4().hex)
 
 # =============================================================================
 # Discord Webhook Functions (specs/009-discord-webhook)

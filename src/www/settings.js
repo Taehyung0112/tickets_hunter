@@ -83,6 +83,9 @@ const auto_guess_options = document.querySelector('#auto_guess_options');
 const real_name = document.querySelector('#real_name');
 const phone = document.querySelector('#phone');
 const credit_card_prefix = document.querySelector('#credit_card_prefix');
+const id_number = document.querySelector('#ID');
+const realname_enable = document.querySelector('#realname_enable');
+const realname_attendees = document.querySelector('#realname_attendees');
 
 // auto fill
 const tixcraft_sid = document.querySelector('#tixcraft_sid');
@@ -624,6 +627,16 @@ function renderAutofillTabTranslations() {
     applyOrRestore('#phone', 'placeholder', 'Example: 0912345678');
     applyOrRestore('#credit_card_prefix', 'placeholder', 'Example: 412345');
     setNearestFormText('credit_card_prefix', 'Some platforms may require the first 6 digits of the credit card for verification.');
+
+    setRowLabelForField('ID', 'ID number');
+    applyOrRestore('#ID', 'placeholder', 'Example: A123456789');
+    setNearestFormText('ID', 'Buyer ID number for real-name events; overseas buyers use the passport number.');
+    setRowLabelForField('realname_attendees', 'Real-name attendee list');
+    applyOrRestore('#realname_attendees', 'placeholder', 'One per line, name,id number\nJane Doe,A123456789');
+    setNearestFormText('realname_attendees', 'In ticket order; leave empty to use the full name and ID number above. Both must match the document exactly — a wrong entry cannot be changed and blocks entry.');
+    setRowLabelForField('realname_enable', 'Real-name auto-fill');
+    setSwitchLabelForInput('realname_enable');
+    setNearestFormText('realname_enable', 'Fills the list below when the checkout page shows ID name / ID number fields.');
 
     setRowLabelForField('tixcraft_sid', fieldLabel('Tixcraft family cookie (TIXUISID / IVUISID / TIXPUISID)', 'tixcraft_sid'));
     setRowLabelForField('ibonqware', fieldLabel('iBon cookie ibonqware', 'ibonqware'));
@@ -1243,6 +1256,9 @@ function load_settins_to_form(settings)
             real_name.value = settings.contact.real_name || '';
             phone.value = settings.contact.phone || '';
             credit_card_prefix.value = settings.contact.credit_card_prefix || '';
+            id_number.value = settings.contact.ID || '';
+            realname_enable.checked = settings.contact.realname_enable || false;
+            realname_attendees.value = settings.contact.realname_attendees || '';
         }
 
         // auto fill (accounts section)
@@ -1543,6 +1559,9 @@ function save_changes_to_dict(silent_flag)
             settings.contact.real_name = real_name.value;
             settings.contact.phone = phone.value;
             settings.contact.credit_card_prefix = credit_card_prefix.value;
+            settings.contact.ID = id_number.value;
+            settings.contact.realname_enable = realname_enable.checked;
+            settings.contact.realname_attendees = realname_attendees.value;
 
             // auto fill (accounts section)
             settings.accounts.tixcraft_sid = tixcraft_sid.value;

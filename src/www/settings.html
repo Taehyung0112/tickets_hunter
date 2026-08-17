@@ -860,6 +860,33 @@
                 <div class="form-text">部分平台可能需要驗證信用卡前六碼</div>
               </div>
             </div>
+
+            <div class="row mb-3">
+              <label for="ID" class="col-sm-2 col-form-label">證件號碼</label>
+              <div class="col-sm-10 col-lg-8 col-xl-6">
+                <input class="form-control" id="ID" value="" placeholder="例如：A123456789" />
+                <div class="form-text">實名制場次的購票人證件號碼；海外者請填護照號碼</div>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <label class="col-sm-2 col-form-label form-check-label">實名制自動填入</label>
+              <div class="col-sm-10 col-lg-8 col-xl-6">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="realname_enable">
+                  <label class="form-check-label" for="realname_enable">啟用</label>
+                </div>
+                <div class="form-text">結帳頁出現「證件姓名／證件號碼」時自動填入下方名單</div>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <label for="realname_attendees" class="col-sm-2 col-form-label">實名制觀眾名單</label>
+              <div class="col-sm-10 col-lg-8 col-xl-6">
+                <textarea class="form-control" id="realname_attendees" rows="3" placeholder="一列一人，姓名,證件號碼&#10;王小明,A123456789&#10;李小美,B234567890"></textarea>
+                <div class="form-text">依票券順序填寫；留空則使用上方「真實姓名」與「證件號碼」。姓名與證號必須與證件完全一致，錯了無法入場也不能更改</div>
+              </div>
+            </div>
           </div>
         </div>
 

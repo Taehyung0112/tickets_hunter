@@ -48,7 +48,6 @@ logs.txt
 
 # Private documentation (Claude Code)
 .claude/
-CLAUDE.md
 /docs/
 .specify/
 specs/

@@ -1586,7 +1586,12 @@ def kktix_get_web_datetime(registrationsNewApp_div, config_dict=None):
     el_web_datetime_list = None
     if not registrationsNewApp_div is None:
         try:
-            el_web_datetime_list = registrationsNewApp_div.find_elements(By.TAG_NAME, 'td')
+            # `By` is a Selenium name that no longer exists since the move to
+            # zendriver, so this raises NameError and the except below swallows
+            # it: the function always falls through to its empty result. Left
+            # in place rather than half-fixed - the whole Selenium-era subtree
+            # under get_answer_string_from_web_* needs removing together.
+            el_web_datetime_list = registrationsNewApp_div.find_elements(By.TAG_NAME, 'td')  # noqa: F821
         except Exception as exc:
             debug.log("find td.ng-binding Exception")
             debug.log(exc)
